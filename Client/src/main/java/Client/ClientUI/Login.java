@@ -1,22 +1,18 @@
 package Client.ClientUI;
 
 import Client.Client;
-import Server.Server;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Login {
-    private static final int port = Server.getPort();
+public class Login implements ActionListener {
+    private static final int port = 45007;
     private static InetAddress ipAddress;
     private final String ip = Client.getIp();
 
@@ -25,6 +21,7 @@ public class Login {
     private final JLabel jlIP;
     private JTextField jtfIP = null;
     private final JCheckBox jcbLocalIP;
+    private JButton jbLogin;
     private ImageIcon imageIcon = new ImageIcon("OtherClass/src/main/resources/OtherRessources/Logo.jpg");
 
 
@@ -100,13 +97,44 @@ public class Login {
         jPanelBut.setPreferredSize(new Dimension(500,80));
         jPanelBut.setBorder(new EmptyBorder(75, 0, 10, 0));
 
-        JButton jbLogin = new JButton("Login");
+        jbLogin = new JButton("Login");
         jbLogin.setPreferredSize(new Dimension(150, 55));
         jbLogin.setFont(new Font("Arial", Font.BOLD, 20));
         jPanelBut.add(jbLogin);
+        jbLogin.addActionListener(this);
+
+        //Setup  UI
+        jFrame.add(jpTitle);
+        jFrame.add(jPanelLogin);
+        jFrame.add(jPanelBut);
+        jFrame.setTitle("Client - Login");
+        jFrame.setVisible(true); //Pour que ce soit visible
+        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Pour que le prog se termine en fermant la frame
+        jFrame.setSize(500, 500); //pour ajuster la taille
+        jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
+        //Layout Par defaut = CardLayout
+        jFrame.setLayout(new BoxLayout(jFrame.getContentPane(), BoxLayout.Y_AXIS));
+        jFrame.setIconImage(imageIcon.getImage());
+        jFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                //Pop up to be sure
+                int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
+                if (answer == JOptionPane.YES_OPTION) { //if YES
+                    // end program
+                    jFrame.dispose();
+                    System.exit(0);
+                } else {
+                    jFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                }
+            }
+        });
+    }
 
 
-        jbLogin.addActionListener(e -> {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() ==jbLogin){
             //Do things with the server
 
             String usrname = jtfUsername.getText();
@@ -119,10 +147,10 @@ public class Login {
             }
             else {
                 try {
-                        ipAddress = InetAddress.getLocalHost();
-                    } catch (UnknownHostException ex) {
-                        ex.printStackTrace();
-                    }
+                    ipAddress = InetAddress.getLocalHost();
+                } catch (UnknownHostException ex) {
+                    ex.printStackTrace();
+                }
             }
             System.out.println("@@@@ IP used : "+ipAddress+" @@@");
             //Creation of the clientsocket and the client using the username enter above
@@ -156,33 +184,6 @@ public class Login {
             jFrame.dispose();
             Menu menu = new Menu(client);
             System.out.println("@@ Login made -> Go to Menu");
-        });
-
-        //Setup  UI
-        jFrame.add(jpTitle);
-        jFrame.add(jPanelLogin);
-        jFrame.add(jPanelBut);
-        jFrame.setTitle("Client - Login");
-        jFrame.setVisible(true); //Pour que ce soit visible
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Pour que le prog se termine en fermant la frame
-        jFrame.setSize(500, 500); //pour ajuster la taille
-        jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
-        //Layout Par defaut = CardLayout
-        jFrame.setLayout(new BoxLayout(jFrame.getContentPane(), BoxLayout.Y_AXIS));
-        jFrame.setIconImage(imageIcon.getImage());
-        jFrame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                //Pop up to be sure
-                int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
-                if (answer == JOptionPane.YES_OPTION) { //if YES
-                    // end program
-                    jFrame.dispose();
-                    System.exit(0);
-                } else {
-                    jFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                }
-            }
-        });
+        }
     }
 }
