@@ -1,7 +1,6 @@
 package Client.ClientUI;
 
 import Client.Client;
-import Server.Server;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,7 +15,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class Login {
-    private static final int port = Server.getPort();
+    private static final int port = 45007;
     private static InetAddress ipAddress;
     private final String ip = Client.getIp();
 
