@@ -37,6 +37,8 @@ public class Client {
     private String[] filesFromServer;
     private File receiveFolder = new File("C:\\VSFY\\FilesToReceive");
     private String[] usersConnected;
+    private DefaultListModel<String> Usersmodel = new DefaultListModel<>();
+
 
     private static final String VARIABLE_ENVIRONNEMENT = "VSFY"; // Nme of the Variable on the PC
 
@@ -167,7 +169,7 @@ public class Client {
                                     } while (exit == false);
 
                                     //Adding all new filename to the model of the JList that will be displayed
-                                    DefaultListModel<String> Playlistmodel = new DefaultListModel<>();
+                                    DefaultListModel<String> Playlistmodel = new DefaultListModel();
                                     System.out.println("List of file given by the SERVER");
                                     for (String s : filesFromServer) {
                                         System.out.println(s);
@@ -206,7 +208,6 @@ public class Client {
                                 }
 //
                                 //Adding all new filename to the model of the JList that will be displayed
-                                DefaultListModel<String> Usersmodel = new DefaultListModel<>();
                                 System.out.println("List of users given by the SERVER");
                                 for (int i = 0 ; i<= usersConnected.length-1; i++) {
                                     System.out.println(usersConnected[i]);
