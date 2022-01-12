@@ -2,6 +2,7 @@ package Client;
 
 import Client.ClientUI.Allusr;
 import Client.ClientUI.Login;
+import Client.ClientUI.SongDetails;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -40,6 +41,8 @@ public class Client {
     private String[][] filesOtherUsrs;
 
     private static final String VARIABLE_ENVIRONNEMENT = "VSFY"; // Nme of the Variable on the PC
+
+   public static Player player = null;
 
     public static void main(String[] args) {
         //Launching the Client Frame
@@ -237,7 +240,6 @@ public class Client {
                                 InputStream is = new BufferedInputStream(socket.getInputStream());
                                 System.out.println("Input received");
 
-                                    Player player = null;
                                     try {
                                         player = new Player(is);
                                         System.out.println("Player created");
@@ -245,6 +247,7 @@ public class Client {
                                         e.printStackTrace();
                                     }
                                     player.play();
+
                                    // Thread.sleep(300000);
 
                                     //Create the file with the filename we get from the Buffin

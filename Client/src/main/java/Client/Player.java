@@ -30,6 +30,11 @@ public class Player {
 
     public void play()
     {
+        if (state.equals("play"))
+        {
+            System.out.println("audio is already playing");
+            return;
+        }
         //start the clip
         clip.start();
         state = "play";
@@ -46,6 +51,17 @@ public class Player {
         this.current = this.clip.getMicrosecondPosition();
         clip.stop();
         state = "paused";
+    }
+
+    public void changeStatus(){
+        if(state.equals("paused")) {
+            clip.start();
+            state = "play";
+
+        } else if(state.equals("play")){
+            clip.stop();
+            state = "paused";
+        }
     }
 
     // Method to reset audio stream

@@ -60,10 +60,18 @@ public class Playlist {
             if (answer == JOptionPane.YES_OPTION) { //if YES
                 //Take the song name choosed
                 String songselected = (String) jListSongs.getSelectedValue();
-                //Open it's frame
-                System.out.println("List selection of : "+songselected);
-                //Tell the server we want to listen to something
+                System.out.println("selection of : "+songselected);
+                //Send command to the server that we want to listen to something
+                client.sendToServer("Listen to");
+                System.out.println("Cmd listen to sent--------------");
+                //Send the Song name we want to listen to
+                client.sendToServer(songselected);
+                System.out.println("name song to sent--------------");
+
+                //The other thread is listening to what is send back
+                //Then create our songDetail frame
                 SongDetails SongFrame = new SongDetails(client,songselected);
+                System.out.println("## playlist -> song detail");
             }
         });
         JScrollPane jScrollPane = new JScrollPane(jListSongs);
