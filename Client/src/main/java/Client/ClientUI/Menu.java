@@ -96,7 +96,7 @@ public class Menu implements ActionListener {
         jFrame.setSize(500, 500); //pour ajuster la taille
         jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
         //Layout Par defaut = CardLayout
-        ImageIcon img = new ImageIcon("OtherClass/src/main/resources/OtherRessources/Logo.jpg");
+        ImageIcon img = new ImageIcon("Client/src/main/resources/Logo.jpg");
         jFrame.setIconImage(img.getImage());
         jFrame.addWindowListener(new WindowAdapter() {
             @Override
@@ -107,8 +107,9 @@ public class Menu implements ActionListener {
 
                     //Close connection with the server
                     if (client != null) {
-                        Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                         client.sendToServer("Logout");
+
+                        Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                         //Close frame
                         jFrame.dispose();
                     }
@@ -158,8 +159,8 @@ public class Menu implements ActionListener {
             int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
             if (answer == JOptionPane.YES_OPTION) { //if YES
                 //Close connection with the server
-                Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                 client.sendToServer("Logout");
+                Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                 //Pour supprimer le clienthandler de la liste et fermer ses socket & buffer
 //Close frame
                 jFrame.dispose();

@@ -24,11 +24,10 @@ public class ClientHandler implements Runnable, Serializable {
     private BufferedReader in;
     private BufferedWriter out;
     private String[] songsOnSrv;
-    private File MainFolder = new File("C:\\VSFY\\FilesToSend");
+    private final File MainFolder = new File("C:\\VSFY\\FilesToSend");
 
     //List of all user currently connected
     private static ArrayList<ClientHandler> handlerArrayList = new ArrayList<>(); //GET LIST OF CLIENT FROM MAIN PAGE
-    //  private static ArrayList<ClientHandler> GiveAccessTo = new ArrayList<>();
 
     private int fileid;
 
@@ -65,13 +64,12 @@ public class ClientHandler implements Runnable, Serializable {
             // (What the client wants to do)
             String actionfromclient;
             do {
-                System.out.println("Waiting for command (from run method of cliH)");
                 try {
                     actionfromclient = in.readLine();
 
                     //If server receive something
                     if (actionfromclient != null) {
-                        System.out.println(clientUsername + " want to : " + actionfromclient);
+                        logr.getLogger().log(Level.INFO, clientUsername + " want to : " + actionfromclient);
 
                         //Server do something according to what the client action send is
                         switch (actionfromclient) {
@@ -85,7 +83,7 @@ public class ClientHandler implements Runnable, Serializable {
                             case "Playlist":
                                 //Command send to user for him to listen
                                 MsgToClient("## Filenames are going to be send");
-                                sendFilesToClient();
+                                sendFilesToClient(this);
                                 //Infos send to user
                                 MsgToClient("INFO : All files send to the client");
                                 break;
@@ -93,12 +91,15 @@ public class ClientHandler implements Runnable, Serializable {
                             case "Listen to":
                                 //read from client which song he want to play
                                 String SongToListen = in.readLine();
+                                System.out.println("song name received : "+SongToListen);
 
                                 //Command send to user for him to listen
                                 MsgToClient("## Song is going to be send");
 
                                 //Then do what's needed
                                 SendSongToClient(SongToListen);
+                               // MsgToClient("## Song has been sent");
+
                                 break;
 
                             case "GetUsers":
@@ -106,6 +107,25 @@ public class ClientHandler implements Runnable, Serializable {
                                 MsgToClient("## Users are going to be send");
                                 sendUserlist();
                                 MsgToClient("## users sent");
+                                break;
+
+                            case "Playlist Of":
+                                //Read which user has been choosed on the list given above
+                                String usrname = in.readLine();
+                                //Take back the selected client
+                                ClientHandler cliChoosed = null;
+                                for (ClientHandler ch : handlerArrayList){
+                                    if (ch.getClientUsername().equals(usrname)){
+                                        cliChoosed = ch;
+                                    }
+                                }
+
+                                if (cliChoosed != null) {
+                                    MsgToClient("## files of other user will be sent");
+                                    //Send to the user the song name [] of the selected user
+                                    sendFilesToClient(cliChoosed);
+                                }
+
                                 break;
 
 //                            case "JoinChat":
@@ -131,30 +151,31 @@ public class ClientHandler implements Runnable, Serializable {
                 }
             } while (socket.isConnected());
         } catch (Exception e) {
-            e.printStackTrace();
+          //  e.printStackTrace();
             closeClientHand(socket, in, out);
         }
     }
 
     //To give a file list to a usr
-    public void sendFilesToClient() {
+    public void sendFilesToClient(ClientHandler clientHandler) {
         boolean exit = false;
         int filesentid = 0;
+        String[] filestosend = clientHandler.getSongsOnSrv();
 
         // send number of files in total
-        MsgToClient(String.valueOf(songsOnSrv.length));
-        System.out.println("nb file sent : " + songsOnSrv.length);
+        MsgToClient(String.valueOf(filestosend.length));
+        System.out.println("nb file sent : " + filestosend.length);
 
         do {
-            if (filesentid >= songsOnSrv.length) {
+            if (filesentid >= filestosend.length) {
                 // When all files are sent, send to server - FINISH - so he can stop listening for a filename
                 MsgToClient("INFO : finish");
                 exit = true;
                 break;
             }
             // for each file in the folder send the path to the server
-            MsgToClient(songsOnSrv[filesentid]);
-            System.out.println("name file sent : " + songsOnSrv[filesentid]);
+            MsgToClient(filestosend[filesentid]);
+            System.out.println("name file sent : " + filestosend[filesentid]);
 
             filesentid++;
             System.out.println("State of file id :" + filesentid);
@@ -203,7 +224,7 @@ public class ClientHandler implements Runnable, Serializable {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+          //  e.printStackTrace();
         }
         return songsOnSrv;
     }
@@ -289,6 +310,7 @@ public class ClientHandler implements Runnable, Serializable {
     }
 
     public void SendSongToClient(String songName) throws IOException {
+
         String pathname = MainFolder.getPath() +"\\"+ songName; //To have the absolute path of the song
         File myFile = new File(pathname);
         long myFileSize = Files.size(Paths.get(pathname));
@@ -296,8 +318,11 @@ public class ClientHandler implements Runnable, Serializable {
         PrintWriter Pout2 = new PrintWriter(socket.getOutputStream(), true);
         //Send file size
         Pout2.println(myFileSize);
+        System.out.println("File size sent : "+myFileSize);
         //Send File name
         Pout2.println(songName);
+        System.out.println("File name sent : "+songName);
+
 
         //To reserve the place in the memory
         byte[] mybytearray = new byte[(int) myFileSize];
@@ -321,6 +346,8 @@ public class ClientHandler implements Runnable, Serializable {
             for (int i = 0; i < handlerArrayList.size(); i++) {
                 if (handlerArrayList.get(i).getClientUsername().equals(clientUsername)) {
                     handlerArrayList.remove(i);
+                    MainPage.getModel().remove(clientId);
+                    MainPage.getjFrame().validate();
                 }
             }
             broadcastMessage("SERVER :: " + clientUsername + " is disconnected");
@@ -347,7 +374,7 @@ public class ClientHandler implements Runnable, Serializable {
                 socket.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             logr.getLogger().log(Level.SEVERE, "exception thrown", e);
         }
     }

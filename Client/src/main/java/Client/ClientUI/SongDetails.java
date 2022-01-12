@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 public class SongDetails implements ActionListener {
 
@@ -47,20 +48,31 @@ public class SongDetails implements ActionListener {
             jPanelTitle.add(jlsongNameChoose);
 
             JPanel jpButCommandSong = new JPanel();
-            jpButCommandSong.setLayout(new BoxLayout(jpButCommandSong, BoxLayout.Y_AXIS));
-
+            jpButCommandSong.setLayout(new BoxLayout(jpButCommandSong, BoxLayout.X_AXIS));
             jpButCommandSong.setPreferredSize(new Dimension(500, 220));
 
-            jbPlay = new JButton("Play");
-            jbPlay.setPreferredSize(new Dimension(100,45));
-            jbPlay.setFont(new Font("Arial",Font.BOLD,16));
+            jbPlay = new JButton();
+
+
+            ImageIcon icon = new ImageIcon(new ImageIcon("Client/src/main/resources/But_Play.png").getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH));
+           // Icon iconPlay = new ImageIcon("Client/src/main/resources/But_Play.png");
+            jbPlay.setIcon(icon);
+            jbPlay.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jbPlay.setBackground(new Color(211,211,211));
+            jbPlay.setPreferredSize(new Dimension(5,5));
             jbPlay.setAlignmentX(Component.LEFT_ALIGNMENT);
             jbPlay.addActionListener(this);
 
-            jbPause = new JButton("Pause");
-            jbPause.setPreferredSize(new Dimension(100,45));
-            jbPause.setFont(new Font("Arial",Font.BOLD,16));
-            jbPause.setAlignmentX(Component.LEFT_ALIGNMENT);
+            jbPause = new JButton();
+            ImageIcon iconPause = new ImageIcon(new ImageIcon("Client/src/main/resources/But_Pause.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
+
+            //Icon iconPause = new ImageIcon("Client/src/main/resources/But_Pause.png");
+            jbPause.setIcon(iconPause);
+            jbPause.setPreferredSize(new Dimension(5,5));
+
+            jbPause.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            jbPause.setBackground(new Color(211,211,211));
+            jbPause.setAlignmentX(Component.RIGHT_ALIGNMENT);
             jbPause.addActionListener(this);
 
             jpButCommandSong.add(jbPlay);
@@ -100,11 +112,13 @@ public class SongDetails implements ActionListener {
                     //Pop up to be sure
                     int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
                     if (answer == 0) { //if YES
+                        client.sendToServer("Logout");
+
                         //Close connection with the server
                         Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                         //Delete this client from the client handler list
-                        client.sendToServer("Logout");
                         // Close frame
+                        Playlist.getjFrame().dispose();
                         jFrame.dispose();
                         System.exit(0);
                     }
@@ -120,10 +134,14 @@ public class SongDetails implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         if(e.getSource()== jbPlay){
+            System.out.println("=== Clic on play");
             //Send the command
             client.sendToServer("Listen to");
+            System.out.println("Cmd listen to sent--------------");
             //Send the Song name we want to listen to
             client.sendToServer(jlsongNameChoose.getText());
+            System.out.println("name song to sent--------------");
+
 
             //Receive files infos  from server
             //Receive command from server

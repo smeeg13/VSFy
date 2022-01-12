@@ -6,30 +6,24 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Player {
-    // to store current position
-    Long currentFrame;
+    Long current;
     Clip clip;
-
-    // current status of clip
-    String status;
-
-    AudioInputStream audioInputStream;
+    String state;
+    AudioInputStream audioIn;
     static String filePath;
 
-    // constructor to initialize streams and clip
+    //Initialization of streams and clip
     public Player(InputStream is)
             throws UnsupportedAudioFileException,
             IOException, LineUnavailableException
     {
         // create AudioInputStream object
-        audioInputStream = AudioSystem.getAudioInputStream(is);
-        //AudioSystem.getAudioInputStream(new File(filePath).getAbsoluteFile());
+        audioIn = AudioSystem.getAudioInputStream(is);
 
         // create clip reference
         clip = AudioSystem.getClip();
-
         // open audioInputStream to the clip
-        clip.open(audioInputStream);
+        clip.open(audioIn);
 
         clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
@@ -38,31 +32,29 @@ public class Player {
     {
         //start the clip
         clip.start();
-
-        status = "play";
+        state = "play";
     }
 
     // Method to pause the audio
     public void pause()
     {
-        if (status.equals("paused"))
+        if (state.equals("paused"))
         {
             System.out.println("audio is already paused");
             return;
         }
-        this.currentFrame =
-                this.clip.getMicrosecondPosition();
+        this.current = this.clip.getMicrosecondPosition();
         clip.stop();
-        status = "paused";
+        state = "paused";
     }
 
     // Method to reset audio stream
     public void resetAudioStream() throws UnsupportedAudioFileException, IOException,
             LineUnavailableException
     {
-        audioInputStream = AudioSystem.getAudioInputStream(
+        audioIn = AudioSystem.getAudioInputStream(
                 new File(filePath).getAbsoluteFile());
-        clip.open(audioInputStream);
+        clip.open(audioIn);
         clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 }

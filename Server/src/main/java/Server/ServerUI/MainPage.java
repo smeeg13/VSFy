@@ -128,7 +128,7 @@ public class MainPage implements ActionListener {
                     closeFrame();
             }
         });
-        ImageIcon img = new ImageIcon("OtherClass/src/main/resources/OtherRessources/Logo.jpg");
+        ImageIcon img = new ImageIcon("Server/src/main/resources/Logo.jpg");
         jFrame.setIconImage(img.getImage());
 
         //Starting the server
@@ -141,7 +141,7 @@ public class MainPage implements ActionListener {
         try {
             this.serverSocket = new ServerSocket(port, 10, localIP);
         } catch (IOException ex) {
-            ex.printStackTrace();
+          //  ex.printStackTrace();
             logr.getLogger().log(Level.SEVERE, "exception thrown", ex);
         }
         Server server = new Server(serverSocket);
@@ -159,6 +159,7 @@ public class MainPage implements ActionListener {
                 } catch (IOException ex) {
                     Server.closeServerSocket(Server.getServerSocket());
                 }
+
                 if (socketClient != null) {
 //Creating the new clienthandler
                     ClientHandler newClientH = new ClientHandler(socketClient, idClient); //
@@ -174,10 +175,6 @@ public class MainPage implements ActionListener {
         }).start();
 
         handlerArrayList = ClientHandler.getHandlerArrayList();
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//CHECK TO REMOVE CLIENT FROM LIST AND FROM MODEL WHEN CLOSING CONNECTION
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     }
 
     @Override

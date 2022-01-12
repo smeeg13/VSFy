@@ -37,6 +37,7 @@ public class Client {
     private String[] filesFromServer;
     private File receiveFolder = new File("C:\\VSFY\\FilesToReceive");
     private String[] usersConnected;
+    private String[][] filesOtherUsrs;
 
     private static final String VARIABLE_ENVIRONNEMENT = "VSFY"; // Nme of the Variable on the PC
 
@@ -139,9 +140,12 @@ public class Client {
 
                         //Receive a SERVER COMMAND
                         String srvCommand = bufReader.readLine();
+                        System.out.println("==== Command From srv :"+srvCommand);
                         switch (srvCommand) {
 
                             case "## Filenames are going to be send":
+                            case "## files of other user will be sent":
+
                                 //Client receive how many filename srv will send
                                 String nbfile = bufReader.readLine();
                                 System.out.println("nb files received : " + nbfile);
@@ -156,7 +160,7 @@ public class Client {
                                         //if the filename is finish then all files has been sent
                                         if (filenameSent.equals("INFO : finish")) {
                                             exit = true;
-                                            break;
+
                                         } else {
                                             //Otherwise we need to add the filename to our String[]
                                             System.out.println("its file id : " + fileid);
@@ -207,32 +211,39 @@ public class Client {
 //
                                 //Adding all new filename to the model of the JList that will be displayed
                                 DefaultListModel<String> Usersmodel = new DefaultListModel<>();
-                                System.out.println("List of users given by the SERVER");
+                                System.out.println("List of users given by the SERVER (Without me)");
                                 for (int i = 0 ; i<= usersConnected.length-1; i++) {
-                                    System.out.println(usersConnected[i]);
-                                    Usersmodel.addElement(usersConnected[i]);
+                                    if (!usersConnected[i].equals(clientUsername)){
+                                        System.out.println(usersConnected[i]);
+                                        Usersmodel.addElement(usersConnected[i]);
+                                    }
                                 }
                                 //Update the model on the Class Playlist
                                 Allusr.setModel(Usersmodel);
                                 break;
 
                             case "## Song is going to be send":
+                                System.out.println("+++++ srv command : "+srvCommand);
                                 //Get file size
                                 int totalsize = Integer.parseInt(bufReader.readLine());
+                                System.out.println("File size receive : "+totalsize);
                                 byte[] mybytearray = new byte[totalsize];
                                 //Get file name
                                 String filename = bufReader.readLine();
+                                System.out.println("File name receive : "+filename);
+
 
                                 //To get all that is sending
                                 InputStream is = new BufferedInputStream(socket.getInputStream());
+                                System.out.println("Input received");
 
                                     Player player = null;
                                     try {
                                         player = new Player(is);
+                                        System.out.println("Player created");
                                     } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
                                         e.printStackTrace();
                                     }
-
                                     player.play();
                                    // Thread.sleep(300000);
 
@@ -255,7 +266,7 @@ public class Client {
 
                                 break;
                         }
-                        break;
+                       // break;
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -376,11 +387,8 @@ public class Client {
     }
 
     public void setSongOnTheClient() {
-        //get the list of all the existing files in the FileToSend directory
-        File folderPath = new File("C:\\VSFY\\FilesToSend");
-
-        //List of all files and directories And put them into the client
-        this.SongOnTheClient = folderPath.list();
+        //List of all files names And put them into the client
+        this.SongOnTheClient = sendFoler.list();
     }
 
     public static InetAddress getIpAddress() {

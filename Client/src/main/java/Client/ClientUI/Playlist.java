@@ -61,9 +61,8 @@ public class Playlist {
                 //Take the song name choosed
                 String songselected = (String) jListSongs.getSelectedValue();
                 //Open it's frame
-
+                System.out.println("List selection of : "+songselected);
                 //Tell the server we want to listen to something
-                client.sendToServer("Listen to");
                 SongDetails SongFrame = new SongDetails(client,songselected);
             }
         });
@@ -112,10 +111,11 @@ public class Playlist {
                 //Pop up to be sure
                 int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
                 if (answer == 0) { //if YES
+                    client.sendToServer("Logout");
+
                     //Close connection with the server
                     Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                     //Delete this client from the client handler list
-                    client.sendToServer("Logout");
                     // Close frame
                     jFrame.dispose();
                     System.exit(0);

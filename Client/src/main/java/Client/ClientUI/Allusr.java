@@ -104,9 +104,29 @@ public class Allusr {
         jListUsrs.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                String SelectedUsr =  jListUsrs.getSelectedValue();
+                //Pop up to be sure
+                int answer = JOptionPane.showConfirmDialog(jFrame, "Are you sure you want to View this user's playlist ? ", "Confirm", JOptionPane.YES_NO_OPTION);
+                if (answer == JOptionPane.YES_OPTION) { //if YES
+                    //Take the user name choosed
+                    String SelectedUsr = jListUsrs.getSelectedValue();
+                    jlUserChoosed.setText(SelectedUsr);
+                    //Open it's frame
 
-                jlUserChoosed.setText(SelectedUsr);
+                    //Tell the server we want to Display the playlist of someone
+                    client.sendToServer("Playlist Of");
+
+                    //Sending the client username of the one we choosed
+                    String separator =" : ";
+                    int sepPos = SelectedUsr.lastIndexOf(separator);
+                    String selectedUsrName = SelectedUsr.substring(0,sepPos);
+                    System.out.println("The username of the client we want - "+selectedUsrName);
+                    client.sendToServer(selectedUsrName);
+
+                    //Display the new frame
+                    jFrame.dispose();
+                    //Then open the fram which will display user's song
+                    Playlist playlist = new Playlist(client);
+                }
             }
         });
 
@@ -127,6 +147,8 @@ public class Allusr {
                 int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
                 if (answer == 0) { //if YES
                    //Close connection with the server
+                    client.sendToServer("Logout");
+
                     Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
                     //Delete this client from the client handler list
 

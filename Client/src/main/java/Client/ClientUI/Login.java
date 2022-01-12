@@ -24,7 +24,7 @@ public class Login {
     private final JLabel jlIP;
     private JTextField jtfIP = null;
     private final JCheckBox jcbLocalIP;
-    private ImageIcon imageIcon = new ImageIcon("OtherClass/src/main/resources/OtherRessources/Logo.jpg");
+    private ImageIcon imageIcon = new ImageIcon("Client/src/main/resources/Logo.jpg");
 
 
     public Login() {
@@ -32,7 +32,7 @@ public class Login {
 
         JPanel jpTitle = new JPanel();
         jpTitle.setLayout(new BoxLayout(jpTitle, BoxLayout.Y_AXIS));
-        jpTitle.setPreferredSize(new Dimension(500,50));
+        jpTitle.setPreferredSize(new Dimension(500,80));
 
         Image image = imageIcon.getImage(); // transform it
         Image newimg = image.getScaledInstance(150, 100, Image.SCALE_SMOOTH); // scale it the smooth way
