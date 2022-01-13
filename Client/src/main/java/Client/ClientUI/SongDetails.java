@@ -1,7 +1,10 @@
 package Client.ClientUI;
 
 import Client.Client;
+import Client.Player;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -11,6 +14,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class SongDetails implements ActionListener {
 
@@ -30,9 +35,14 @@ public class SongDetails implements ActionListener {
     private final ImageIcon iconHighVol = new ImageIcon(new ImageIcon("Client/src/main/resources/high-volume.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
     private final ImageIcon iconLowVol = new ImageIcon(new ImageIcon("Client/src/main/resources/low-volume.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
 
+    private  InputStream inputStream;
+    private Player player ;
 
-    public SongDetails(final Client client, String songNameChoosed) {
+    public SongDetails( Client client, String songNameChoosed, InputStream is) throws UnsupportedAudioFileException, LineUnavailableException, IOException {
         //Creating and implementing components of the frame
+        inputStream = is;
+        player = new Player(songNameChoosed,is);
+
         jFrame = new JFrame();
         this.client = client;
 
@@ -149,7 +159,7 @@ public class SongDetails implements ActionListener {
         });
         //Launching the song
 
-        Client.player.play();
+        player.play();
     }
 
 
@@ -157,7 +167,7 @@ public class SongDetails implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == jButton) {
-            Client.player.changeStatus();
+            player.changeStatus();
 
             System.out.println("=== Clic on button play / pause");
             if (playing) {
@@ -170,7 +180,7 @@ public class SongDetails implements ActionListener {
         }
 
         if (e.getSource() == jbBackMenu) {
-            Client.player.pause();
+            player.pause();
             stopListening = true;
             jFrame.dispose();
             //Close Playlist frame too
@@ -179,7 +189,7 @@ public class SongDetails implements ActionListener {
         }
 
         if (e.getSource() == jbBackToPlaylist) {
-            Client.player.pause();
+            player.pause();
             stopListening = true;
             jFrame.dispose();
             Playlist.getjFrame().setVisible(true);

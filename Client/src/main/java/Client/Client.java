@@ -3,6 +3,7 @@ package Client;
 import Client.ClientUI.Allusr;
 import Client.ClientUI.Chat.Frame;
 import Client.ClientUI.Login;
+import Client.ClientUI.SongDetails;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -277,6 +278,7 @@ public class Client {
 
                                 case "## Song from srv is going to be send":
                                     ReceiveSong();
+                                    break;
 
                                 case "## Song is going to be send":
                                     ReceiveSong();
@@ -365,10 +367,12 @@ public class Client {
         InputStream is = new BufferedInputStream(socket.getInputStream());
         System.out.println("Input received");
 
-        player= new Player(filename,is);
-        players.add(player);
+        SongDetails SongFrame = new SongDetails(this,filename,is);
 
-        System.out.println("Player created");
+//        player= new Player(filename,is);
+//        players.add(player);
+//
+//        System.out.println("Player created");
 
         // Thread.sleep(300000);
 

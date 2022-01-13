@@ -72,7 +72,7 @@ public class Playlist {
 
                 //Then create our songDetail frame
                 jFrame.setVisible(false);
-                SongDetails SongFrame = new SongDetails(client,songselected);
+                //SongDetails SongFrame = new SongDetails(client,songselected);
                 System.out.println("## playlist -> song detail");
             }
         });

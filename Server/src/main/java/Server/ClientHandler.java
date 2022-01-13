@@ -109,8 +109,8 @@ public class ClientHandler implements Runnable {
 
                                 //Then do what's needed
                                 SendSongToClient(SongToListen, MainFolder);
-
                                 break;
+
                             case "Listen fromsrv":
                                 //read from client which song he want to play
                                 String SongToListenfromsrv = in.readLine();
