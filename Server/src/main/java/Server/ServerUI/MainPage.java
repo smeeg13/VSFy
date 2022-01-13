@@ -29,7 +29,7 @@ public class MainPage implements ActionListener {
     private static final int port = Server.getPort(); //Port
 
     private ServerSocket serverSocket;
-    private int idClient;
+    private static int idClient;
     private static ArrayList<ClientHandler> handlerArrayList = new ArrayList<>(); //All Users
     private static final ExecutorService pool = Executors.newFixedThreadPool(4); //FOR 4 USER ONLY
     private final MyLogger logr = Server.getLogr();
@@ -166,7 +166,7 @@ public class MainPage implements ActionListener {
                     logr.getLogger().log(Level.INFO, "The Client " + newClientH.getClientUsername() + " (N° " + idClient + " With the IP " + newClientH.getClientIPAddress() + ") has connected");
                     idClient++; //increment of 1 for the next client
                     //Add the new client into the JList Model
-                    model.add(newClientH.getClientId(), newClientH);
+                    model.add(handlerArrayList.size()-1, newClientH);
 
 //Launch the run method in clienthandler for this client
                     pool.execute(newClientH);
@@ -193,6 +193,14 @@ public class MainPage implements ActionListener {
 
     public static DefaultListModel<ClientHandler> getModel() {
         return model;
+    }
+
+    public static int getIdClient() {
+        return idClient;
+    }
+
+    public static void setIdClient(int idClient) {
+        MainPage.idClient = idClient;
     }
 
     public static JFrame getjFrame() {

@@ -2,6 +2,7 @@ package Server;
 
 import Server.ServerUI.FirstPage;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -22,7 +23,6 @@ public class Server {
         }
     }
 
-    ;
     private static InetAddress localIP;
     static {
         try {
@@ -97,9 +97,13 @@ public class Server {
         LocalDate currently = LocalDate.now();
         String currentsMonthYear = currently.getMonth() +"_"+ currently.getYear();
         String LogFileName = currentsMonthYear+".log";
-        String LogFilePath = "Server/src/main/resources/Logs/";
+        //Store in User's machine
+        File LogFolder = new File("C:\\VSFY\\Log_Server\\");
 
-        MyLogger log =new MyLogger( LogFilePath+LogFileName,currentsMonthYear+"_Server");
+        //Store in intellij
+        //String LogFilePath = "Server/src/main/resources/Logs/";
+
+        MyLogger log =new MyLogger( LogFolder.getPath()+LogFileName,currentsMonthYear+"_Server");
         return log;
     }
 }

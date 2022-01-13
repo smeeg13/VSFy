@@ -8,14 +8,12 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-
 public class Playlist {
     //WHEN A USR SELECT ONE FILE HE CAN LISTEN TO IT
     //SO THE SERVER WILL SEND THE ENTIRE FILE ACCORDING TO THE FILENAME SELECTED
     //IT WILL BE LISTENED AND THE CLIENT CAN PAUSE IT
 
     private static JFrame jFrame;
-    private String[] Files;
     private static DefaultListModel<String> model = new DefaultListModel<>();
 
     public Playlist(Client client) {
@@ -48,7 +46,8 @@ public class Playlist {
 
 
         JList jListSongs = new JList();
-        jListSongs.setModel(model); // the model is set before displaying this playlist frame
+        DefaultListModel<String> mymodel = Playlist.getModel();
+        jListSongs.setModel(mymodel); // the model is set before displaying this playlist frame
 
         jListSongs.setVisibleRowCount(4);
         jListSongs.setPreferredSize(new Dimension(400, 100));
@@ -61,15 +60,18 @@ public class Playlist {
                 //Take the song name choosed
                 String songselected = (String) jListSongs.getSelectedValue();
                 System.out.println("selection of : "+songselected);
-                //Send command to the server that we want to listen to something
-                client.sendToServer("Listen to");
-                System.out.println("Cmd listen to sent--------------");
-                //Send the Song name we want to listen to
-                client.sendToServer(songselected);
-                System.out.println("name song to sent--------------");
+
+                    //Send command to the server that we want to listen to something
+                    client.sendToServer("Listen to");
+                    System.out.println("Cmd listen to sent--------------");
+                    //Send the Song name we want to listen to
+                    client.sendToServer(songselected);
+                    System.out.println("name song to sent--------------");
 
                 //The other thread is listening to what is send back
+
                 //Then create our songDetail frame
+                jFrame.setVisible(false);
                 SongDetails SongFrame = new SongDetails(client,songselected);
                 System.out.println("## playlist -> song detail");
             }
@@ -84,17 +86,6 @@ public class Playlist {
         jpBottom.setLayout(new BoxLayout(jpBottom,BoxLayout.Y_AXIS));
         jpBottom.setPreferredSize(new Dimension(500,80));
 
-
-
-        JButton jbAccesOtherUsr = new JButton("Access Other User's Playlist");
-        jbAccesOtherUsr.setPreferredSize(new Dimension(150,45));
-        jbAccesOtherUsr.setFont(new Font("Arial",Font.BOLD,16));
-        jbAccesOtherUsr.addActionListener(e -> {
-            jFrame.dispose();
-            Allusr allusr = new Allusr(client);
-
-        });
-        jpBottom.add(jbAccesOtherUsr);
         JButton jbBackMenu = new JButton("Back to Menu");
         jbBackMenu.setPreferredSize(new Dimension(150,45));
         jbBackMenu.setFont(new Font("Arial",Font.BOLD,16));
@@ -111,7 +102,6 @@ public class Playlist {
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Pour que le prog se termine en fermant la frame
         jFrame.setSize(500,500); //pour ajuster la taille
         jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
-        //Layout Par defaut = CardLayout
         jFrame.setLayout(new BoxLayout(jFrame.getContentPane(),BoxLayout.Y_AXIS));
         jFrame.addWindowListener(new WindowAdapter() {
             @Override
@@ -138,6 +128,10 @@ public class Playlist {
 
     public static JFrame getjFrame() {
         return jFrame;
+    }
+
+    public static DefaultListModel<String> getModel() {
+        return model;
     }
 
     public static void setModel(DefaultListModel<String> model) {

@@ -128,10 +128,11 @@ public class ClientHandler implements Runnable, Serializable {
 
                                 break;
 
-//                            case "JoinChat":
-//                                this.JoinChat();
-//                                actionfromclient = "";
-//                                break;
+                            case "JoinChat":
+                                MsgToClient("## In the chat");
+                                JoinChat();
+                                break;
+
 //                            case "LeftChat":
 //                                broadcastMessage("SERVER :: " + clientUsername + " left the chat group ! ");
 //                                actionfromclient = "";
@@ -215,7 +216,7 @@ public class ClientHandler implements Runnable, Serializable {
                     //Adding the filename to the Sting []
                     songsOnSrv[fileid] = filenameSent;
                     fileid++;
-                } while (exit == false);
+                } while (!exit);
             }
             //To be sure filename are stored in the server
             System.out.println("List of file given by the client");
@@ -292,18 +293,28 @@ public class ClientHandler implements Runnable, Serializable {
 
     public void JoinChat() throws IOException {
         //Tells other user that you've entered the chat
-        broadcastMessage("SERVER :: " + clientUsername + " entered the chat group ! ");
+       // broadcastMessage("SERVER :: " + clientUsername + " entered the chat group ! ");
         //Tells only you how you can quit
-        this.out.write("## Write 'quit' to exit the chat");
-        this.out.newLine();
-        this.out.flush();
-
         String msg;
+        String usrFrom;
+        boolean exit= false;
         try {
-            System.out.println(clientUsername + " is connected");
-            msg = in.readLine();
-            assert msg != null;
-            broadcastMessage(msg);
+            do {
+                msg = in.readLine();
+                System.out.println("msg from user : "+msg);
+
+                //Tant que le client ferme pas la frame
+                // on envoie les msg aux autres
+                if (msg.equals("Left Chat")){
+                    exit = true;
+                    break;
+                }
+                    broadcastMessage(msg);
+                    System.out.println("msg transmit");
+
+            }while (!exit);
+            MsgToClient("## Chat Closed");
+
         } catch (IOException e) {
             closeClientHand(socket, in, out);
         }
@@ -347,6 +358,7 @@ public class ClientHandler implements Runnable, Serializable {
                 if (handlerArrayList.get(i).getClientUsername().equals(clientUsername)) {
                     handlerArrayList.remove(i);
                     MainPage.getModel().remove(clientId);
+                    MainPage.setIdClient(MainPage.getIdClient()-1);
                     MainPage.getjFrame().validate();
                 }
             }

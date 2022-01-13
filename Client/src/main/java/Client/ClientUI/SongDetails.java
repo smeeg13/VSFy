@@ -4,6 +4,8 @@ import Client.Client;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,162 +14,175 @@ import java.awt.event.WindowEvent;
 
 public class SongDetails implements ActionListener {
 
-        private final JFrame jFrame;
-        private JButton jbBackMenu;
-        private JButton jbBackToPlaylist;
-        private final Client client;
-        private JButton jbPause;
-        private JButton jButton;
-        private JLabel jlsongNameChoose;
+    private final JFrame jFrame;
+    private JButton jbBackMenu;
+    private JButton jbBackToPlaylist;
+    private final Client client;
+    private JButton jbPause;
+    private JButton jButton;
+    private JLabel jlsongNameChoose;
+    private boolean playing = true;
+    private JSlider jslidVolume;
+    public static boolean stopListening;
 
     private final ImageIcon iconPlay = new ImageIcon(new ImageIcon("Client/src/main/resources/But_Play.png").getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH));
-    private  final ImageIcon iconPause = new ImageIcon(new ImageIcon("Client/src/main/resources/But_Pause.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
+    private final ImageIcon iconPause = new ImageIcon(new ImageIcon("Client/src/main/resources/But_Pause.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
+    private final ImageIcon iconHighVol = new ImageIcon(new ImageIcon("Client/src/main/resources/high-volume.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
+    private final ImageIcon iconLowVol = new ImageIcon(new ImageIcon("Client/src/main/resources/low-volume.png").getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
 
 
     public SongDetails(final Client client, String songNameChoosed) {
-            //Creating and implementing components of the frame
-            jFrame = new JFrame();
-            this.client = client;
+        //Creating and implementing components of the frame
+        jFrame = new JFrame();
+        this.client = client;
 
-            JPanel jPanelTitle = new JPanel();
-            jPanelTitle.setLayout(new BoxLayout(jPanelTitle,BoxLayout.Y_AXIS));
-            JLabel jlTitle = new JLabel("VSfy Song Player");
-            jlTitle.setFont(new Font("Arial",Font.BOLD,25));
-            jlTitle.setBorder(new EmptyBorder(20,0,10,0));
-            jlTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel jPanelTitle = new JPanel();
+        jPanelTitle.setLayout(new BoxLayout(jPanelTitle, BoxLayout.Y_AXIS));
+        jPanelTitle.setPreferredSize(new Dimension(400, 150));
 
-            JLabel jlFilename = new JLabel("Song choosed : ");
-            jlFilename.setFont(new Font("Arial",Font.BOLD,20));
-            jlFilename.setBorder(new EmptyBorder(50,0,0,0));
-            jlFilename.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel jlFilename = new JLabel("Song choosed : ");
+        jlFilename.setFont(new Font("Arial", Font.BOLD, 16));
+        jlFilename.setBorder(new EmptyBorder(50, 0, 0, 0));
+        jlFilename.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            jlsongNameChoose = new JLabel(songNameChoosed);
-            jlsongNameChoose.setFont(new Font("Arial",Font.ITALIC,20));
-            jlsongNameChoose.setBorder(new EmptyBorder(50,0,0,0));
-            jlsongNameChoose.setAlignmentX(Component.CENTER_ALIGNMENT);
+        jlsongNameChoose = new JLabel(songNameChoosed);
+        jlsongNameChoose.setFont(new Font("Arial", Font.ITALIC, 14));
+        jlsongNameChoose.setBorder(new EmptyBorder(50, 0, 0, 0));
+        jlsongNameChoose.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            jPanelTitle.add(jlTitle);
-            jPanelTitle.add(jlFilename);
-            jPanelTitle.add(jlsongNameChoose);
+        jPanelTitle.add(jlFilename);
+        jPanelTitle.add(jlsongNameChoose);
 
-            JPanel jpButCommandSong = new JPanel();
-            jpButCommandSong.setLayout(new BoxLayout(jpButCommandSong, BoxLayout.X_AXIS));
-            jpButCommandSong.setPreferredSize(new Dimension(500, 220));
+        JPanel jpButCommandSong = new JPanel();
+        jpButCommandSong.setLayout(new BoxLayout(jpButCommandSong, BoxLayout.Y_AXIS));
+        jpButCommandSong.setPreferredSize(new Dimension(400, 120));
 
-            jButton = new JButton();
+        jButton = new JButton();
+        jButton.setIcon(iconPause);
+        jButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        jButton.setBackground(new Color(211, 211, 211));
+        jButton.setPreferredSize(new Dimension(5, 5));
+        jButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        jButton.addActionListener(this);
+        jpButCommandSong.add(jButton);
+
+        JPanel jPanelVol = new JPanel();
+        jPanelVol.setLayout(new GridLayout(1, 3));
+        jPanelVol.setPreferredSize(new Dimension(400, 80));
+
+        JLabel jllow = new JLabel();
+        jllow.setIcon(iconLowVol);
+        jllow.setPreferredSize(new Dimension(5, 5));
+        jllow.setBackground(new Color(211, 211, 211));
+        jllow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        jslidVolume = new JSlider(JSlider.HORIZONTAL, 0, 100, 40);
+        jslidVolume.setPreferredSize(new Dimension(100, 80));
+        jslidVolume.setMajorTickSpacing(20);
+        jslidVolume.setPaintLabels(true);
+        jslidVolume.setFont(new Font("MV Boli", Font.PLAIN, 10));
+        jslidVolume.addChangeListener(e -> {
+            JSlider source = (JSlider) e.getSource();
+            client.getPlayer().setVolume((float) (source.getValue() / 100.0));
+        });
+        jslidVolume.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
-           // Icon iconPlay = new ImageIcon("Client/src/main/resources/But_Play.png");
+        JLabel jlhigh = new JLabel();
+        jlhigh.setIcon(iconHighVol);
+        jlhigh.setPreferredSize(new Dimension(5, 5));
+        jlhigh.setBackground(new Color(211, 211, 211));
+        jlhigh.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-            jButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            jButton.setBackground(new Color(211,211,211));
-            jButton.setPreferredSize(new Dimension(5,5));
-            jButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-            jButton.addActionListener(this);
+        jPanelVol.add(jllow);
+        jPanelVol.add(jslidVolume);
+        jPanelVol.add(jlhigh);
 
-            jbPause = new JButton();
+        JPanel jpBottom = new JPanel();
+        jpBottom.setLayout(new BoxLayout(jpBottom, BoxLayout.X_AXIS));
 
-//            //Icon iconPause = new ImageIcon("Client/src/main/resources/But_Pause.png");
-//            jbPause.setIcon(iconPause);
-//            jbPause.setPreferredSize(new Dimension(5,5));
-//
-//            jbPause.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-//            jbPause.setBackground(new Color(211,211,211));
-//            jbPause.setAlignmentX(Component.RIGHT_ALIGNMENT);
-//            jbPause.addActionListener(this);
+        jbBackToPlaylist = new JButton("Back to Playlist");
+        jbBackToPlaylist.setPreferredSize(new Dimension(100, 45));
+        jbBackToPlaylist.setFont(new Font("Arial", Font.BOLD, 16));
+        jbBackToPlaylist.setAlignmentX(Component.LEFT_ALIGNMENT);
+        jbBackToPlaylist.addActionListener(this);
+        jpBottom.add(jbBackToPlaylist);
 
-            jpButCommandSong.add(jButton);
-         //   jpButCommandSong.add(jbPause);
+        jbBackMenu = new JButton("Back to Menu");
+        jbBackMenu.setPreferredSize(new Dimension(100, 45));
+        jbBackMenu.setFont(new Font("Arial", Font.BOLD, 16));
+        jbBackToPlaylist.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        jbBackMenu.addActionListener(this);
+        jpBottom.add(jbBackMenu);
 
+        //Setup  UI
+        jFrame.setTitle("VSFY Song player");
+        jFrame.add(jPanelTitle);
+        jFrame.add(jpButCommandSong);
+        jFrame.add(jPanelVol);
+        jFrame.add(jpBottom);
+        jFrame.setVisible(true); //Pour que ce soit visible
+        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Pour que le prog se termine en fermant la frame
+        jFrame.setSize(400, 400); //pour ajuster la taille
+        jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
+        //Layout Par defaut = CardLayout
+        jFrame.setLayout(new BoxLayout(jFrame.getContentPane(), BoxLayout.Y_AXIS));
+        jFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                //Pop up to be sure
+                int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
+                if (answer == 0) { //if YES
+                    client.sendToServer("Logout");
 
-            JPanel jpBottom = new JPanel();
-            jpBottom.setLayout(new BoxLayout(jpBottom,BoxLayout.X_AXIS));
-
-            jbBackToPlaylist = new JButton("Back to Playlist");
-            jbBackToPlaylist.setPreferredSize(new Dimension(100,45));
-            jbBackToPlaylist.setFont(new Font("Arial",Font.BOLD,16));
-            jbBackToPlaylist.setAlignmentX(Component.LEFT_ALIGNMENT);
-            jbBackToPlaylist.addActionListener(this);
-            jpBottom.add(jbBackToPlaylist);
-
-            jbBackMenu = new JButton("Back to Menu");
-            jbBackMenu.setPreferredSize(new Dimension(100,45));
-            jbBackMenu.setFont(new Font("Arial",Font.BOLD,16));
-            jbBackToPlaylist.setAlignmentX(Component.RIGHT_ALIGNMENT);
-            jbBackMenu.addActionListener(this);
-            jpBottom.add(jbBackMenu);
-
-            //Setup  UI
-            jFrame.add(jPanelTitle);
-            jFrame.add(jpButCommandSong);
-            jFrame.add(jpBottom);
-            jFrame.setVisible(true); //Pour que ce soit visible
-            jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Pour que le prog se termine en fermant la frame
-            jFrame.setSize(400,400); //pour ajuster la taille
-            jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
-            //Layout Par defaut = CardLayout
-            jFrame.setLayout(new BoxLayout(jFrame.getContentPane(),BoxLayout.Y_AXIS));
-            jFrame.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    //Pop up to be sure
-                    int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
-                    if (answer == 0) { //if YES
-                        client.sendToServer("Logout");
-
-                        //Close connection with the server
-                        Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
-                        //Delete this client from the client handler list
-                        // Close frame
-                        Playlist.getjFrame().dispose();
-                        jFrame.dispose();
-                        System.exit(0);
-                    }
-                    else {
-                        jFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                    }
+                    //Close connection with the server
+                    Client.ExitApplication(client.getSocket(), client.getBufReader(), client.getBufWriter());
+                    //Delete this client from the client handler list
+                    // Close frame
+                    Playlist.getjFrame().dispose();
+                    jFrame.dispose();
+                    System.exit(0);
+                } else {
+                    jFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
                 }
-            });
-        }
+            }
+        });
+        //Launching the song
+
+        Client.player.play();
+    }
 
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        if(e.getSource()== jButton){
-            System.out.println("=== Clic on button");
-
+        if (e.getSource() == jButton) {
             Client.player.changeStatus();
 
-
-//            //Send the command
-//            client.sendToServer("Listen to");
-//            System.out.println("Cmd listen to sent--------------");
-//            //Send the Song name we want to listen to
-//            client.sendToServer(jlsongNameChoose.getText());
-//            System.out.println("name song to sent--------------");
-
-            //Receive files infos  from server
-            //Receive command from server
+            System.out.println("=== Clic on button play / pause");
+            if (playing) {
+                jButton.setIcon(iconPlay);
+                playing = false;
+            } else {
+                jButton.setIcon(iconPause);
+                playing = true;
+            }
         }
 
-        if (e.getSource() == jbPause){
-            System.out.println("=== Clic on pause");
-
-            //Client.player.pause();
-            Client.player.changeStatus();
-
-        }
-
-        if (e.getSource() == jbBackMenu){
+        if (e.getSource() == jbBackMenu) {
+            Client.player.pause();
+            stopListening = true;
             jFrame.dispose();
             //Close Playlist frame too
             Playlist.getjFrame().dispose();
             Menu menu = new Menu(client);
         }
 
-        if (e.getSource() == jbBackToPlaylist){
+        if (e.getSource() == jbBackToPlaylist) {
+            Client.player.pause();
+            stopListening = true;
             jFrame.dispose();
+            Playlist.getjFrame().setVisible(true);
         }
     }
 }

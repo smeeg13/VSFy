@@ -1,8 +1,8 @@
 package Client;
 
 import Client.ClientUI.Allusr;
+import Client.ClientUI.Chat.Frame;
 import Client.ClientUI.Login;
-import Client.ClientUI.SongDetails;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -11,7 +11,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Scanner;
+import java.util.ArrayList;
 
 import static Client.ClientUI.Playlist.setModel;
 
@@ -34,15 +34,16 @@ public class Client {
     static String ipString = String.valueOf(ipAddress);
     static String ip = ipString.substring(ipString.lastIndexOf("/") + 1);
     private String[] SongOnTheClient;
-    private File sendFoler = new File("C:\\VSFY\\FilesToSend");
+    private final File sendFoler = new File("C:\\VSFY\\FilesToSend");
     private String[] filesFromServer;
-    private File receiveFolder = new File("C:\\VSFY\\FilesToReceive");
+    private final File receiveFolder = new File("C:\\VSFY\\FilesToReceive");
     private String[] usersConnected;
     private String[][] filesOtherUsrs;
 
     private static final String VARIABLE_ENVIRONNEMENT = "VSFY"; // Nme of the Variable on the PC
-
-   public static Player player = null;
+    public static ArrayList<Player> players = new ArrayList<Player>();
+    private final int nbplayer=0;
+    public static Player player = null;
 
     public static void main(String[] args) {
         //Launching the Client Frame
@@ -126,14 +127,11 @@ public class Client {
     //Method that is running on a separate thread to be able to listen for every server responses
     public void listenToServer() {
         final String[] ConfirmDownload = new String[1];
-        final String[] ConfirmSend = new String[1];
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 boolean exit = false;
-                int fileid = 0;
-                int userid = 0;
                 try {
                     //Confirmation that the client's file list has been given to srv
                     ConfirmDownload[0] = bufReader.readLine();
@@ -143,115 +141,114 @@ public class Client {
 
                         //Receive a SERVER COMMAND
                         String srvCommand = bufReader.readLine();
-                        System.out.println("==== Command From srv :"+srvCommand);
-                        switch (srvCommand) {
+                        System.out.println("==== Command From srv :" + srvCommand);
+                        if (srvCommand != null){
+                            switch (srvCommand) {
 
-                            case "## Filenames are going to be send":
-                            case "## files of other user will be sent":
+                                case "## Filenames are going to be send":
+                                case "## files of other user will be sent":
 
-                                //Client receive how many filename srv will send
-                                String nbfile = bufReader.readLine();
-                                System.out.println("nb files received : " + nbfile);
+                                    //Client receive how many filename srv will send
+                                    String nbfile = bufReader.readLine();
+                                    System.out.println("nb files received : " + nbfile);
+                                    int fileid=0;
+                                    if (nbfile != null) {
+                                        filesFromServer = new String[Integer.parseInt(nbfile)];
+                                        do {
+                                            //Receive the filename
+                                            String filenameSent = bufReader.readLine();
+                                            System.out.println("Filename received : " + filenameSent);
 
-                                if (nbfile != null) {
-                                    filesFromServer = new String[Integer.parseInt(nbfile)];
-                                    do {
-                                        //Receive the filename
-                                        String filenameSent = bufReader.readLine();
-                                        System.out.println("Filename received : " + filenameSent);
+                                            //if the filename is finish then all files has been sent
+                                            if (filenameSent.equals("INFO : finish")) {
+                                                exit = true;
 
-                                        //if the filename is finish then all files has been sent
-                                        if (filenameSent.equals("INFO : finish")) {
-                                            exit = true;
+                                            } else {
+                                                //Otherwise we need to add the filename to our String[]
+                                                System.out.println("its file id : " + fileid);
+                                                filesFromServer[fileid] = filenameSent;
+                                                fileid++;
+                                            }
 
-                                        } else {
-                                            //Otherwise we need to add the filename to our String[]
-                                            System.out.println("its file id : " + fileid);
-                                            filesFromServer[fileid] = filenameSent;
-                                            fileid++;
+                                        } while (!exit);
+
+                                        //Adding all new filename to the model of the JList that will be displayed
+                                        DefaultListModel<String> Playlistmodel = new DefaultListModel<>();
+                                        System.out.println("List of file given by the SERVER");
+                                        for (String s : filesFromServer) {
+                                            System.out.println(s);
+                                            Playlistmodel.addElement(s);
                                         }
+                                        //Update the model on the Class Playlist
+                                        setModel(Playlistmodel);
+                                    }
+                                    break;
+                                case "## Users are going to be send":
+                                    int userid = 0;
+                                    //Client receive how many Users srv will send
+                                    String nbusr = bufReader.readLine();
+                                    System.out.println("nb users received : " + nbusr);
 
-                                    } while (exit == false);
+                                    if (nbusr != null) {
 
+                                        usersConnected = new String[Integer.parseInt(nbusr)];
+
+                                        do {
+                                            //Receive the filename
+                                            String usrreceive = bufReader.readLine();
+                                            System.out.println("usr received : " + usrreceive);
+
+                                            //if the filename is finish then all files has been sent
+                                            if (usrreceive.equals("INFO : finish")) {
+                                                exit = true;
+                                                break;
+                                            } else {
+                                                //Otherwise we need to add the filename to our String[]
+                                                System.out.println("its usr id : " + userid);
+                                                usersConnected[userid] = usrreceive;
+                                                userid++;
+                                            }
+
+                                        } while (!exit);
+                                    }
+//
                                     //Adding all new filename to the model of the JList that will be displayed
-                                    DefaultListModel<String> Playlistmodel = new DefaultListModel<>();
-                                    System.out.println("List of file given by the SERVER");
-                                    for (String s : filesFromServer) {
-                                        System.out.println(s);
-                                        Playlistmodel.addElement(s);
+                                    DefaultListModel<String> Usersmodel = new DefaultListModel<>();
+                                    System.out.println("List of users given by the SERVER (Without me)");
+                                    for (int i = 0; i <= usersConnected.length - 1; i++) {
+                                        if (!usersConnected[i].equals(clientUsername)) {
+                                            System.out.println(usersConnected[i]);
+                                            Usersmodel.addElement(usersConnected[i]);
+                                        }
                                     }
                                     //Update the model on the Class Playlist
-                                    setModel(Playlistmodel);
-                                }
-                                break;
-                            case "## Users are going to be send":
-                                //Client receive how many Users srv will send
-                                String nbusr = bufReader.readLine();
-                                System.out.println("nb users received : " + nbusr);
+                                    Allusr.setModel(Usersmodel);
+                                    break;
 
-                                if (nbusr!= null){
-
-                                    usersConnected = new String[Integer.parseInt(nbusr)];
-
-                                    do {
-                                        //Receive the filename
-                                        String usrreceive = bufReader.readLine();
-                                        System.out.println("usr received : " + usrreceive);
-
-                                        //if the filename is finish then all files has been sent
-                                        if (usrreceive.equals("INFO : finish")) {
-                                            exit = true;
-                                            break;
-                                        } else {
-                                            //Otherwise we need to add the filename to our String[]
-                                            System.out.println("its usr id : " + userid);
-                                            usersConnected[userid] = usrreceive;
-                                            userid++;
-                                        }
-
-                                    } while (exit == false);
-                                }
-//
-                                //Adding all new filename to the model of the JList that will be displayed
-                                DefaultListModel<String> Usersmodel = new DefaultListModel<>();
-                                System.out.println("List of users given by the SERVER (Without me)");
-                                for (int i = 0 ; i<= usersConnected.length-1; i++) {
-                                    if (!usersConnected[i].equals(clientUsername)){
-                                        System.out.println(usersConnected[i]);
-                                        Usersmodel.addElement(usersConnected[i]);
-                                    }
-                                }
-                                //Update the model on the Class Playlist
-                                Allusr.setModel(Usersmodel);
-                                break;
-
-                            case "## Song is going to be send":
-                                System.out.println("+++++ srv command : "+srvCommand);
-                                //Get file size
-                                int totalsize = Integer.parseInt(bufReader.readLine());
-                                System.out.println("File size receive : "+totalsize);
-                                byte[] mybytearray = new byte[totalsize];
-                                //Get file name
-                                String filename = bufReader.readLine();
-                                System.out.println("File name receive : "+filename);
+                                case "## Song is going to be send":
+                                    System.out.println("+++++ srv command : " + srvCommand);
+                                    //Get file size
+                                    int totalsize = Integer.parseInt(bufReader.readLine());
+                                    System.out.println("File size receive : " + totalsize);
+                                    byte[] mybytearray = new byte[totalsize];
+                                    //Get file name
+                                    String filename = bufReader.readLine();
+                                    System.out.println("File name receive : " + filename);
 
 
-                                //To get all that is sending
-                                InputStream is = new BufferedInputStream(socket.getInputStream());
-                                System.out.println("Input received");
+                                    //To get all that is sending
+                                    InputStream is = new BufferedInputStream(socket.getInputStream());
+                                    System.out.println("Input received");
 
-                                    try {
-                                        player = new Player(is);
+                                    player= new Player(filename,is);
+                                            players.add(player);
+
                                         System.out.println("Player created");
-                                    } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-                                        e.printStackTrace();
-                                    }
-                                    player.play();
 
-                                   // Thread.sleep(300000);
+                                    // Thread.sleep(300000);
 
                                     //Create the file with the filename we get from the Buffin
-                                    FileOutputStream fos = new FileOutputStream(receiveFolder.getAbsolutePath()+"\\" + filename);
+                                    FileOutputStream fos = new FileOutputStream(receiveFolder.getAbsolutePath() + "\\" + filename);
                                     BufferedOutputStream bos = new BufferedOutputStream(fos);
                                     int byteReadTot = 0;
                                     while (byteReadTot < totalsize) {
@@ -262,65 +259,35 @@ public class Client {
                                         bos.write(mybytearray, 0, byteRead);
 
                                     }
-
                                     bos.close();
+                                    break;
+                                case "## In the chat":
+                                    boolean exit2=false;
+                                    do{
+                                        String msg = bufReader.readLine();
+                                        System.out.println("msg received : "+msg);
 
+                                        //Tant que le serveur ne confirme pas qu'on veut quitter le chat
+                                        //On écoute les msg envoyés
+                                        if (msg.equals("## Chat Closed")){
+                                            exit2 = true;
+                                            break;
+                                        }
+                                        //Creation du msg qui s'affiche sur frame
+                                        Frame.receiveMsgFromOther(msg);
 
+                                    }while (!exit2);
 
-                                break;
-                        }
-                       // break;
+                                   // break;
+
+                            }
                     }
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
+                    }
+                } catch (IOException | UnsupportedAudioFileException | LineUnavailableException ioException) {
                 }
             }
         }).start();
     }
-
-
-//    public void playSong() throws IOException, InterruptedException {
-//        int totalsize = Integer.parseInt(bufReader.readLine());
-//        String filename = bufReader.readLine();
-//        byte[] mybytearray = new byte[totalsize];
-//
-//        //To get all that is sending
-//        InputStream is = new BufferedInputStream(socket.getInputStream());
-//
-//
-//        if (filename.endsWith(".wav")) {
-//            Player player = null;
-//            try {
-//                player = new Player(is);
-//            } catch (UnsupportedAudioFileException | IOException e) {
-//                e.printStackTrace();
-//                logr.getLogr().log(Level.SEVERE, "exception thrown", e);
-//            } catch (LineUnavailableException e) {
-//                e.printStackTrace();
-//                logr.getLogr().log(Level.SEVERE, "exception thrown", e);
-//            }
-//            System.out.println("Do you want to play the song ? yes or no :");
-//           // if (scanner.nextLine() == "yes")
-//                player.play();
-//            Thread.sleep(300000);
-//
-//            //Create the file with the filename we get from the Buffin
-//            FileOutputStream fos = new FileOutputStream("c://received//" + filename);
-//            BufferedOutputStream bos = new BufferedOutputStream(fos);
-//            int byteReadTot = 0;
-//            while (byteReadTot < totalsize) {
-//                //To place all the byte i receive in my bytearray to store it in a file on my disk
-//                int byteRead = is.read(mybytearray, 0, mybytearray.length);
-//                byteReadTot += byteRead;
-//                System.out.println("byte read : " + byteReadTot);
-//                bos.write(mybytearray, 0, byteRead);
-//
-//            }
-//
-//            bos.close();
-//
-//        }
-//    }
 
     public static void ExitApplication(Socket socket, BufferedReader bufReader, BufferedWriter bufWriter) {
         closeAll(socket, bufReader, bufWriter);
@@ -345,20 +312,13 @@ public class Client {
         }
     }
 
-    public void sendMessage() {
+    public void sendMessage(String myMsg) {
         try {
             //To send a message in the chat
-            Scanner scanner = new Scanner(System.in);
-
             while (socket.isConnected()) {
-                String msgToSend = scanner.nextLine();
-                if (msgToSend.equals("quit")) {
-                    //
-                } else {
-                    bufWriter.write(clientUsername + " :: " + msgToSend);
+                    bufWriter.write(myMsg);
                     bufWriter.newLine();
                     bufWriter.flush();
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -419,5 +379,12 @@ public class Client {
         return filesFromServer.length;
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        Client.player = player;
+    }
 }
 

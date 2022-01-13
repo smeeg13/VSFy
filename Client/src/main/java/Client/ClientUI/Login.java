@@ -48,7 +48,7 @@ public class Login {
         jpTitle.add(jTitle);
 
         JPanel jPanelLogin = new JPanel();
-        jPanelLogin.setPreferredSize(new Dimension(500,200));
+        jPanelLogin.setPreferredSize(new Dimension(500,155));
 
         JLabel jlUserName = new JLabel("Enter Your Username : ");
         jlUserName.setFont(new Font("Arial", Font.BOLD, 18));
@@ -96,7 +96,7 @@ public class Login {
         jPanelLogin.add(jlPort);
 
         JPanel jPanelBut = new JPanel();
-        jPanelBut.setPreferredSize(new Dimension(500,80));
+        jPanelBut.setPreferredSize(new Dimension(500,60));
         jPanelBut.setBorder(new EmptyBorder(75, 0, 10, 0));
 
         JButton jbLogin = new JButton("Login");

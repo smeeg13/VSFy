@@ -1,6 +1,8 @@
 package Client.ClientUI;
 
 import Client.Client;
+import Client.ClientUI.Chat.Frame;
+import Client.ClientUI.Chat.msgBox;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -19,6 +21,7 @@ public class Menu implements ActionListener {
 
     private final JButton jbShowPlaylist;
     private final JButton jbGetAllUsers;
+    private final JButton jbChat;
     private JButton AskUsersPlaylist;
     private JButton GiveAccessToPlaylist;
     private JButton jbEnterChat;
@@ -48,20 +51,31 @@ public class Menu implements ActionListener {
         c.gridheight = 1;
         c.gridwidth = 2;
         gridLayout.setConstraints(jbShowPlaylist, c);
-        jbShowPlaylist.addActionListener(this);
         jPanel.add(jbShowPlaylist);
+        jbShowPlaylist.addActionListener(this);
 
 
         jbGetAllUsers = new JButton("Access Other Users");
         jbGetAllUsers.setPreferredSize(new Dimension(150, 75));
         jbGetAllUsers.setFont(new Font("Arial", Font.BOLD, 20));
-        c.gridx = 2;
+        c.gridx = 1;
         c.gridy = 1;
         c.gridheight = 1;
         c.gridwidth = 2;
         gridLayout.setConstraints(jbGetAllUsers, c);
         jbGetAllUsers.addActionListener(this);
         jPanel.add(jbGetAllUsers);
+
+        jbChat = new JButton("Enter the chat");
+        jbChat.setPreferredSize(new Dimension(150, 75));
+        jbChat.setFont(new Font("Arial", Font.BOLD, 20));
+        c.gridx = 2;
+        c.gridy = 2;
+        c.gridheight = 1;
+        c.gridwidth = 2;
+        gridLayout.setConstraints(jbChat, c);
+        jbChat.addActionListener(this);
+        jPanel.add(jbChat);
 
 
         //AskUsersPlaylist= new JButton();
@@ -148,11 +162,16 @@ public class Menu implements ActionListener {
 
         }
 
-//        if (e.getSource()==jbEnterChat){
-//            client.sendActionToServer("JoinChat");
+        if (e.getSource()==jbChat){
+            client.sendToServer("JoinChat");
+            //Server will send back a confirmation that we entered chat
+                //So we can listen on everything that coming from others
 //            client.listenToMessage();
-//            client.sendMessage();
-//        }
+//            client.sendMessage(); //Done by the button of the chat frame
+            Frame chatFrame = new Frame(client);
+            jFrame.dispose();
+            chatFrame.setVisible(true);
+        }
 
         if (e.getSource() == jbLogout) {
             //Pop up to be sure
