@@ -11,6 +11,8 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import static Client.ClientUI.Playlist.setModel;
@@ -34,23 +36,33 @@ public class Client {
     static String ipString = String.valueOf(ipAddress);
     static String ip = ipString.substring(ipString.lastIndexOf("/") + 1);
     private String[] SongOnTheClient;
-    private final File sendFoler = new File("C:\\VSFY\\FilesToSend");
+    private final File sendFolder = new File("C:\\VSFY\\FilesToSend");
     private String[] filesFromServer;
     private final File receiveFolder = new File("C:\\VSFY\\FilesToReceive");
     private String[] usersConnected;
     private String[][] filesOtherUsrs;
 
-    private static final String VARIABLE_ENVIRONNEMENT = "VSFY"; // Nme of the Variable on the PC
     public static ArrayList<Player> players = new ArrayList<Player>();
-    private final int nbplayer=0;
     public static Player player = null;
 
+    /**
+     * Main Method for the Client
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         //Launching the Client Frame
         Login login = new Login();
     }
 
-    //Constructor
+    /**
+     * Constructor
+     *
+     * @param socket
+     * @param clientUsername
+     * @param ipAddress
+     * @throws UnknownHostException
+     */
     public Client(Socket socket, String clientUsername, InetAddress ipAddress) throws UnknownHostException {
         try {
             //Initialization of variable according to what's given on parameters
@@ -79,7 +91,11 @@ public class Client {
         }
     }
 
-    //Method to send the action the client want to do to the server
+    /**
+     * Method to send the action the client want to do to the server
+     *
+     *  @param action
+     */
     public void sendToServer(String action) {
         try {
             this.getBufWriter().write(action);
@@ -91,7 +107,9 @@ public class Client {
         }
     }
 
-    //Method to give the client's file list to the server
+    /**
+     * Method to give the client's file list to the server
+     */
     public void sendFileToServer() {
         try {
             boolean exit = false;
@@ -122,6 +140,38 @@ public class Client {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void SendSongToServer(File sendFolder) throws IOException {
+
+        File[] files = sendFolder.listFiles();
+        int nbsongs = files.length;
+        //Envoyer nb de file qui seront envoyée
+        sendToServer(String.valueOf(nbsongs));
+
+        //Pour chaque musique existante l'envoyer sur le server
+        for (File file : files){
+            long myFileSize = Files.size(Paths.get(file.getAbsolutePath()));
+
+            PrintWriter Pout2 = new PrintWriter(socket.getOutputStream(), true);
+            //Send file size
+            Pout2.println(myFileSize);
+            System.out.println("File size sent : "+myFileSize);
+            //Send File name
+            Pout2.println(file.getName());
+            System.out.println("File name sent : "+file.getName());
+
+            byte[] mybytearray = new byte[(int) myFileSize];
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+
+            bis.read(mybytearray, 0, mybytearray.length);
+            //open outputStream on Socket
+            OutputStream os = socket.getOutputStream();
+            //Send byteArray
+            os.write(mybytearray, 0, mybytearray.length);
+            os.flush();
+        }
+
     }
 
     //Method that is running on a separate thread to be able to listen for every server responses
@@ -225,60 +275,36 @@ public class Client {
                                     Allusr.setModel(Usersmodel);
                                     break;
 
+                                case "## Song from srv is going to be send":
+                                    ReceiveSong();
+
                                 case "## Song is going to be send":
-                                    System.out.println("+++++ srv command : " + srvCommand);
-                                    //Get file size
-                                    int totalsize = Integer.parseInt(bufReader.readLine());
-                                    System.out.println("File size receive : " + totalsize);
-                                    byte[] mybytearray = new byte[totalsize];
-                                    //Get file name
-                                    String filename = bufReader.readLine();
-                                    System.out.println("File name receive : " + filename);
-
-
-                                    //To get all that is sending
-                                    InputStream is = new BufferedInputStream(socket.getInputStream());
-                                    System.out.println("Input received");
-
-                                    player= new Player(filename,is);
-                                            players.add(player);
-
-                                        System.out.println("Player created");
-
-                                    // Thread.sleep(300000);
-
-                                    //Create the file with the filename we get from the Buffin
-                                    FileOutputStream fos = new FileOutputStream(receiveFolder.getAbsolutePath() + "\\" + filename);
-                                    BufferedOutputStream bos = new BufferedOutputStream(fos);
-                                    int byteReadTot = 0;
-                                    while (byteReadTot < totalsize) {
-                                        //To place all the byte i receive in my bytearray to store it in a file on my disk
-                                        int byteRead = is.read(mybytearray, 0, mybytearray.length);
-                                        byteReadTot += byteRead;
-                                        System.out.println("byte read : " + byteReadTot);
-                                        bos.write(mybytearray, 0, byteRead);
-
-                                    }
-                                    bos.close();
+                                    ReceiveSong();
                                     break;
+
+                                case "## Should download file to serv":
+                                    SendSongToServer(sendFolder);
+                                    sendToServer("All files completely sent");
+                                    break;
+
+
                                 case "## In the chat":
-                                    boolean exit2=false;
-                                    do{
-                                        String msg = bufReader.readLine();
+                                    String msg= null;
+
+
+                                        msg = bufReader.readLine();
                                         System.out.println("msg received : "+msg);
 
                                         //Tant que le serveur ne confirme pas qu'on veut quitter le chat
                                         //On écoute les msg envoyés
                                         if (msg.equals("## Chat Closed")){
-                                            exit2 = true;
+                                           // exit2 = true;
                                             break;
                                         }
                                         //Creation du msg qui s'affiche sur frame
                                         Frame.receiveMsgFromOther(msg);
+                                        //msg= null;
 
-                                    }while (!exit2);
-
-                                   // break;
 
                             }
                     }
@@ -325,6 +351,41 @@ public class Client {
             ExitApplication(socket, bufReader, bufWriter);
         }
     }
+    public void ReceiveSong() throws IOException, UnsupportedAudioFileException, LineUnavailableException {
+        //Get file size
+        int totalsize = Integer.parseInt(bufReader.readLine());
+        System.out.println("File size receive : " + totalsize);
+        byte[] mybytearray = new byte[totalsize];
+        //Get file name
+        String filename = bufReader.readLine();
+        System.out.println("File name receive : " + filename);
+
+
+        //To get all that is sending
+        InputStream is = new BufferedInputStream(socket.getInputStream());
+        System.out.println("Input received");
+
+        player= new Player(filename,is);
+        players.add(player);
+
+        System.out.println("Player created");
+
+        // Thread.sleep(300000);
+
+        //Create the file with the filename we get from the Buffin
+        FileOutputStream fos = new FileOutputStream(receiveFolder.getAbsolutePath() + "\\" + filename);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        int byteReadTot = 0;
+        while (byteReadTot < totalsize) {
+            //To place all the byte i receive in my bytearray to store it in a file on my disk
+            int byteRead = is.read(mybytearray, 0, mybytearray.length);
+            byteReadTot += byteRead;
+            System.out.println("byte read : " + byteReadTot);
+            bos.write(mybytearray, 0, byteRead);
+
+        }
+        bos.close();
+    }
 
 //------------------------------------------------------------------------------------------------
 //All Getters & Setters
@@ -351,7 +412,7 @@ public class Client {
 
     public void setSongOnTheClient() {
         //List of all files names And put them into the client
-        this.SongOnTheClient = sendFoler.list();
+        this.SongOnTheClient = sendFolder.list();
     }
 
     public static InetAddress getIpAddress() {

@@ -14,16 +14,22 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
+
 public class FirstPage {
 
     private final JFrame jFrame;
     private final MyLogger logr = Server.getLogr();
 
-    //Constructor
+    /**
+     * Constructor
+     * @throws IOException
+     */
+
     public FirstPage() throws IOException {
 
         logr.getLogger().info("=========== program starts=============");
 
+        //UI Components
         jFrame = new JFrame();
         JPanel jPanelBut = new JPanel();
         jPanelBut.setPreferredSize(new Dimension(500, 50));
@@ -65,6 +71,7 @@ public class FirstPage {
         jbSartServer.setFont(new Font("Arial", Font.BOLD, 17));
         jPanelBut.add(jbSartServer);
 
+        //Listener for the Start Button
         jbSartServer.addActionListener(e -> {
             //Go to MainPage frame
             jFrame.dispose();
@@ -83,10 +90,10 @@ public class FirstPage {
         jFrame.setVisible(true); //Pour que ce soit visible
         jFrame.setSize(600, 600); //pour ajuster la taille
         jFrame.setLocationRelativeTo(null); //positionner Au milieu de l'ecran
-        //Layout Par defaut = CardLayout
         jFrame.setLayout(new BoxLayout(jFrame.getContentPane(), BoxLayout.Y_AXIS));
         ImageIcon img = new ImageIcon("Server/src/main/resources/Logo.jpg");
         jFrame.setIconImage(img.getImage());
+        //Window Listener
         jFrame.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {

@@ -23,7 +23,6 @@ import java.util.logging.Level;
 
 public class MainPage implements ActionListener {
 
-
     private static final InetAddress localIP = Server.getLocalIP();
     private static final String ip = Server.getIp(); //IP
     private static final int port = Server.getPort(); //Port
@@ -39,6 +38,10 @@ public class MainPage implements ActionListener {
     private final JButton jbCloseServer;
 
 
+    /**
+     * Constructor
+     * @throws IOException
+     */
     public MainPage() throws IOException {
         jFrame = new JFrame();
         BoxLayout boxLayout = new BoxLayout(jFrame.getContentPane(), BoxLayout.Y_AXIS);
@@ -136,6 +139,12 @@ public class MainPage implements ActionListener {
         startServer();
     }
 
+    /**
+     * Method to start the server
+     *
+     * It will create the server socket which will wait for client's connection
+     * And it will create the ClientHandler when there's a connection
+     */
     public void startServer() {
 //Creation of the Server socket
         try {
@@ -165,7 +174,7 @@ public class MainPage implements ActionListener {
                     ClientHandler newClientH = new ClientHandler(socketClient, idClient); //
                     logr.getLogger().log(Level.INFO, "The Client " + newClientH.getClientUsername() + " (N° " + idClient + " With the IP " + newClientH.getClientIPAddress() + ") has connected");
                     idClient++; //increment of 1 for the next client
-                    //Add the new client into the JList Model
+//Add the new client into the JList Model
                     model.add(handlerArrayList.size()-1, newClientH);
 
 //Launch the run method in clienthandler for this client
@@ -177,36 +186,22 @@ public class MainPage implements ActionListener {
         handlerArrayList = ClientHandler.getHandlerArrayList();
     }
 
+    /**
+     * Method to control the action on the Logout button
+     * @param e
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == jbCloseServer) {
-            //Pop up to be sure
-            int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
-            if (answer == JOptionPane.YES_OPTION) { //if YES
-                closeFrame();
-            }
+            closeFrame();
         }
     }
 
-//------------------------------------------------------------------------------------------------
-//All Getters
-
-    public static DefaultListModel<ClientHandler> getModel() {
-        return model;
-    }
-
-    public static int getIdClient() {
-        return idClient;
-    }
-
-    public static void setIdClient(int idClient) {
-        MainPage.idClient = idClient;
-    }
-
-    public static JFrame getjFrame() {
-        return jFrame;
-    }
-
+    /**
+     * Method use to close the menu frame
+     *
+     * It will close the server socket & Close every client connection existing
+     */
     public void closeFrame(){
         //Pop up to be sure
         int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to disconnect ? ", "Loggin Out", JOptionPane.YES_NO_CANCEL_OPTION);
@@ -227,5 +222,27 @@ public class MainPage implements ActionListener {
             jFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         }
     }
+
+//------------------------------------------------------------------------------------------------
+//All Getters & Setters
+//------------------------------------------------------------------------------------------------
+
+    public static DefaultListModel<ClientHandler> getModel() {
+        return model;
+    }
+
+    public static int getIdClient() {
+        return idClient;
+    }
+
+    public static void setIdClient(int idClient) {
+        MainPage.idClient = idClient;
+    }
+
+    public static JFrame getjFrame() {
+        return jFrame;
+    }
+
+
 }
 

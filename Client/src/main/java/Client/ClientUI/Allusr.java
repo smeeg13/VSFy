@@ -1,6 +1,7 @@
 package Client.ClientUI;
 
 import Client.Client;
+import Client.PlaylistOtherUsr;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -53,23 +54,11 @@ public class Allusr {
         jListUsrs = new JList<String>();
         jListUsrs.setModel(model);
 
-//        if (clients!=null){
-//            //Adding every connected usr on the model of the jlist
-//            for (int i = 0; i < clients.size(); i++) {
-//                model.addElement(clients.get(i).getClientUsername()+" : "+clients.get(i).getClientIPAddress());
-//            }
             jListUsrs.setVisibleRowCount(4);
             jListUsrs.setPreferredSize(new Dimension(400,80));
             jScrollPane = new JScrollPane(jListUsrs);
             jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
             jPanelListUser.add(jScrollPane);
-//        }
-//        else {
-//            //If no user connected, put a label to inform and take off the jlist
-//            jlNoUsr = new JLabel("Any user connected for the moment");
-//            jListUsrs.setVisible(false);
-//            jPanelListUser.add(jlNoUsr);
-//        }
 
 //Print out information of the selected usr
 // IF HAVE ACCESS IF NOT ASK FOR ACCESS FIRST
@@ -125,7 +114,7 @@ public class Allusr {
                     //Display the new frame
                     jFrame.dispose();
                     //Then open the fram which will display user's song
-                    Playlist playlist = new Playlist(client);
+                    PlaylistOtherUsr playlist = new PlaylistOtherUsr(client);
                 }
             }
         });

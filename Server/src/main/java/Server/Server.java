@@ -14,7 +14,6 @@ public class Server {
 
     private static ServerSocket serverSocket;
     private static MyLogger serverLogger;
-
     static {
         try {
             serverLogger = setServerLogger();
@@ -22,7 +21,6 @@ public class Server {
             e.printStackTrace();
         }
     }
-
     private static InetAddress localIP;
     static {
         try {
@@ -36,10 +34,14 @@ public class Server {
     private static final String ipString = String.valueOf(localIP);
     private static final String ip = ipString.substring(ipString.lastIndexOf("/") + 1);
 
+    /**
+     * Main for the Server
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             //Create the log file of the month if it doesn't exist or complete the exiting one
-            setServerLogger();
+            //setServerLogger();
             //Launching of the first frame which will let us start the server
             FirstPage firstPage = new FirstPage();
 
@@ -50,12 +52,18 @@ public class Server {
         }
     }
 
-    //Constructor
+    /**
+     * Constructor
+     * @param serverSocket
+     */
     public Server(ServerSocket serverSocket) {
         Server.serverSocket = serverSocket;
     }
 
-    //Method to close the server
+    /**
+     * Method to close the server
+     * @param serverSocket
+     */
     public static void closeServerSocket(ServerSocket serverSocket) {
         try {
             if (serverSocket != null) {
@@ -72,6 +80,7 @@ public class Server {
     }
 //------------------------------------------------------------------------------------------------
 //All Getters & Setters
+//------------------------------------------------------------------------------------------------
 
     public static int getPort() {
         return 45007;
@@ -98,12 +107,8 @@ public class Server {
         String currentsMonthYear = currently.getMonth() +"_"+ currently.getYear();
         String LogFileName = currentsMonthYear+".log";
         //Store in User's machine
-        File LogFolder = new File("C:\\VSFY\\Log_Server\\");
-
-        //Store in intellij
-        //String LogFilePath = "Server/src/main/resources/Logs/";
-
-        MyLogger log =new MyLogger( LogFolder.getPath()+LogFileName,currentsMonthYear+"_Server");
+        File LogFolder = new File("C:\\VSFY\\Logs_Server");
+        MyLogger log =new MyLogger( LogFolder.getAbsolutePath()+ "\\" + LogFileName,currentsMonthYear+"_Server");
         return log;
     }
 }

@@ -25,7 +25,7 @@ public class Frame  extends JFrame implements WindowListener {
         initComponents();
         panel.setLayout(new MigLayout("fillx"));
         this.client = client;
-
+        setTitle(client.getClientUsername()+"'s Chat");
     }
 
     private void initComponents() {
@@ -128,6 +128,7 @@ public class Frame  extends JFrame implements WindowListener {
         String msgFrom =client.getClientUsername();
         //Send to server our msg so he can broadcast it to others
         client.sendMessage(client.getClientUsername()+":"+text);
+        txt.setText("");
 
         //Put it on the frame
         MsgRight myMsg = new MsgRight(msgFrom,text);

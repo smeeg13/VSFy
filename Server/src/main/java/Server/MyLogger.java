@@ -11,11 +11,13 @@ public class MyLogger {
     private Logger logger;
     private FileHandler fileHandlr;
 
-    //Value 1 or les = INFO
-    //Value 2 = WARNING
-    //Value 3 = SEVERE
-
-    //Contructor of the log
+    /**
+     * Contructor of the log
+     *
+     * @param pathname
+     * @param nameLog
+     * @throws IOException
+     */
     public MyLogger(String pathname, String nameLog) throws IOException {
 
         //Check if the file where the logs are stored already exist or not

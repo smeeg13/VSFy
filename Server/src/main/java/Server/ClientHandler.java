@@ -1,8 +1,10 @@
 package Server;
 
-
+import Client.Player;
 import Server.ServerUI.MainPage;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -10,7 +12,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
-public class ClientHandler implements Runnable, Serializable {
+public class ClientHandler implements Runnable {
     private static final MyLogger logr;
     static {
         logr = Server.getLogr();
@@ -25,13 +27,19 @@ public class ClientHandler implements Runnable, Serializable {
     private BufferedWriter out;
     private String[] songsOnSrv;
     private final File MainFolder = new File("C:\\VSFY\\FilesToSend");
+    private final File StoredFolder = new File("C:\\VSFY\\FilesOnServer");
+
 
     //List of all user currently connected
     private static ArrayList<ClientHandler> handlerArrayList = new ArrayList<>(); //GET LIST OF CLIENT FROM MAIN PAGE
-
     private int fileid;
 
-    //Constructor
+    /**
+     * Constructor
+     *
+     * @param clientSocketOnServer
+     * @param id
+     */
     public ClientHandler(Socket clientSocketOnServer, int id) {
         try {
             this.socket = clientSocketOnServer;
@@ -57,7 +65,9 @@ public class ClientHandler implements Runnable, Serializable {
         }
     }
 
-    //What is running on a different thread (What the server do for every client)
+    /**
+     * What is running on a different thread (What the server do for every client)
+     */
     public void run() {
         try {
             //Always Listen to which command the client is sending
@@ -88,6 +98,7 @@ public class ClientHandler implements Runnable, Serializable {
                                 MsgToClient("INFO : All files send to the client");
                                 break;
 
+
                             case "Listen to":
                                 //read from client which song he want to play
                                 String SongToListen = in.readLine();
@@ -97,8 +108,19 @@ public class ClientHandler implements Runnable, Serializable {
                                 MsgToClient("## Song is going to be send");
 
                                 //Then do what's needed
-                                SendSongToClient(SongToListen);
-                               // MsgToClient("## Song has been sent");
+                                SendSongToClient(SongToListen, MainFolder);
+
+                                break;
+                            case "Listen fromsrv":
+                                //read from client which song he want to play
+                                String SongToListenfromsrv = in.readLine();
+                                System.out.println("song name received : "+SongToListenfromsrv);
+
+                                //Command send to user for him to listen
+                                MsgToClient("## Song from srv is going to be send");
+
+                                //Then do what's needed
+                                SendSongToClient(SongToListenfromsrv,StoredFolder);
 
                                 break;
 
@@ -109,9 +131,29 @@ public class ClientHandler implements Runnable, Serializable {
                                 MsgToClient("## users sent");
                                 break;
 
+//                            case "Playlist Of":
+//                                //Read which user has been choosed on the list given above
+//                                String usrname = in.readLine();
+//                                //Take back the selected client
+//                                ClientHandler cliChoosed = null;
+//                                for (ClientHandler ch : handlerArrayList){
+//                                    if (ch.getClientUsername().equals(usrname)){
+//                                        cliChoosed = ch;
+//                                    }
+//                                }
+//
+//                                if (cliChoosed != null) {
+//                                    MsgToClient("## files of other user will be sent");
+//                                    //Send to the user the song name [] of the selected user
+//                                    sendFilesToClient(cliChoosed);
+//                                }
+//
+//                                break;
+
                             case "Playlist Of":
                                 //Read which user has been choosed on the list given above
                                 String usrname = in.readLine();
+
                                 //Take back the selected client
                                 ClientHandler cliChoosed = null;
                                 for (ClientHandler ch : handlerArrayList){
@@ -119,24 +161,32 @@ public class ClientHandler implements Runnable, Serializable {
                                         cliChoosed = ch;
                                     }
                                 }
+                                //dire au client selectionné qu'il doit downloader ses files sur le serveur
+                                MsgToSpecificClient(cliChoosed.clientUsername,"## Should download file to serv");
 
-                                if (cliChoosed != null) {
+                                //Read how many files will be sent
+                                String nbfiles =  in.readLine();
+
+                                //For each file server saves it
+                                for (int i = 0; i == Integer.parseInt(nbfiles); i++){
+                                    receiveSongFromClient();
+                                }
+
+                                String confirm = in.readLine();
+
+                                if (confirm.equals("All files completely sent")){
+                                    //Si ok envoyer list des noms d'abord
+                                    //ensuite si clic, server enverra file au client
                                     MsgToClient("## files of other user will be sent");
                                     //Send to the user the song name [] of the selected user
                                     sendFilesToClient(cliChoosed);
                                 }
-
                                 break;
 
                             case "JoinChat":
                                 MsgToClient("## In the chat");
                                 JoinChat();
                                 break;
-
-//                            case "LeftChat":
-//                                broadcastMessage("SERVER :: " + clientUsername + " left the chat group ! ");
-//                                actionfromclient = "";
-//                                break;
 
                             case "Logout":
                                 MainPage.getModel().remove(clientId);
@@ -146,18 +196,21 @@ public class ClientHandler implements Runnable, Serializable {
                         }
                     }
                 } catch (IOException e) {
-                    // e.printStackTrace();
                     logr.getLogger().log(Level.SEVERE, "exception thrown", e);
                     closeClientHand(socket, in, out);
                 }
             } while (socket.isConnected());
         } catch (Exception e) {
-          //  e.printStackTrace();
+            logr.getLogger().log(Level.WARNING,"Client socket not connected");
             closeClientHand(socket, in, out);
         }
     }
 
-    //To give a file list to a usr
+    /**
+     * Method to give a file list to a user
+     *
+     *  @param clientHandler
+     */
     public void sendFilesToClient(ClientHandler clientHandler) {
         boolean exit = false;
         int filesentid = 0;
@@ -184,7 +237,12 @@ public class ClientHandler implements Runnable, Serializable {
         } while (!exit);
     }
 
-    //Read for the filename list send by the user as long as the client is not sending FINISH
+    /**
+     * Method to Read for the filename list send by the user
+     * as long as the client is not sending FINISH
+     *
+     *  @return
+     */
     public String[] readFilesFromClient() {
 
         String filenameSent;
@@ -225,12 +283,16 @@ public class ClientHandler implements Runnable, Serializable {
             }
 
         } catch (IOException e) {
-          //  e.printStackTrace();
         }
         return songsOnSrv;
     }
 
-    //Send a message to all users connected except the one that the msg came from
+    /**
+     * Method to send to the client a Message ( simple string)
+     * or an Action to Do ( start by ##)
+     *
+     * @param msgToSend
+     */
     public void MsgToClient(String msgToSend) {
         try {
             out.write(msgToSend);
@@ -238,17 +300,41 @@ public class ClientHandler implements Runnable, Serializable {
             out.flush();
 
         } catch (IOException e) {
+            logr.getLogger().log(Level.WARNING,"Client socket not connected");
             closeClientHand(socket, in, out);
         }
 
         System.out.println("Server has sent TO " + clientUsername + " : " + msgToSend);
         logr.getLogger().log(Level.INFO, "SERVER SEND TO " + clientUsername + " : " + msgToSend);
     }
+    /**
+     * Method to send to the client a Message ( simple string)
+     * or an Action to Do ( start by ##)
+     *
+     * @param msgToSend
+     */
+    public void MsgToSpecificClient(String usrname,String msgToSend) {
+        for (ClientHandler clientHandler : handlerArrayList) {
+            try {
+                if (clientHandler.clientUsername.equals(usrname)) {
+                    clientHandler.out.write(msgToSend);
+                    clientHandler.out.newLine();
+                    clientHandler.out.flush();
+                }
+            } catch (IOException e) {
+                logr.getLogger().log(Level.WARNING,"Client socket not connected");
+                closeClientHand(socket, in, out);
+            }
+        }
+        logr.getLogger().log(Level.INFO, "SERVER SEND ONLY TO  : "+usrname+" - " + msgToSend);
+    }
 
-    //To give a list of all connected users to a usr
-    //MUST TRY TO SEND OVER ALL THE CLIENT HANDLERS OBJECT WITH OBJECT OUTPUTSTREAM
-    //https://gist.github.com/chatton/14110d2550126b12c0254501dde73616
-    public void sendUserlist() throws IOException {
+    /**
+     * Method to send to the client a list of all users connected
+     *
+     * @throws IOException
+     */
+  public void sendUserlist() throws IOException {
         boolean exit = false;
         int usersentid = 0;
 
@@ -275,7 +361,11 @@ public class ClientHandler implements Runnable, Serializable {
     }
 
 
-    //Send a message to all users connected except the one that the msg came from
+    /**
+     * Method to Send a message to all users connected except the one that the msg came from
+     *
+     * @param msgToSend
+     */
     public void broadcastMessage(String msgToSend) {
         for (ClientHandler clientHandler : handlerArrayList) {
             try {
@@ -285,33 +375,34 @@ public class ClientHandler implements Runnable, Serializable {
                     clientHandler.out.flush();
                 }
             } catch (IOException e) {
+                logr.getLogger().log(Level.WARNING,"Client socket not connected");
                 closeClientHand(socket, in, out);
             }
         }
         logr.getLogger().log(Level.INFO, "SERVER SEND TO EVERYONE : " + msgToSend);
     }
 
+    /**
+     * Method when the client want to join the chat
+     *
+     * @throws IOException
+     */
     public void JoinChat() throws IOException {
-        //Tells other user that you've entered the chat
-       // broadcastMessage("SERVER :: " + clientUsername + " entered the chat group ! ");
-        //Tells only you how you can quit
+
         String msg;
-        String usrFrom;
         boolean exit= false;
         try {
             do {
                 msg = in.readLine();
                 System.out.println("msg from user : "+msg);
 
-                //Tant que le client ferme pas la frame
-                // on envoie les msg aux autres
                 if (msg.equals("Left Chat")){
                     exit = true;
                     break;
-                }
+                }else {
                     broadcastMessage(msg);
                     System.out.println("msg transmit");
-
+                }
             }while (!exit);
             MsgToClient("## Chat Closed");
 
@@ -320,9 +411,15 @@ public class ClientHandler implements Runnable, Serializable {
         }
     }
 
-    public void SendSongToClient(String songName) throws IOException {
+    /**
+     * Method to send 1 song to the client
+     *
+     * @param songName
+     * @throws IOException
+     */
+    public void SendSongToClient(String songName, File Folder) throws IOException {
 
-        String pathname = MainFolder.getPath() +"\\"+ songName; //To have the absolute path of the song
+        String pathname = Folder.getAbsolutePath() +"\\"+ songName; //To have the absolute path of the song
         File myFile = new File(pathname);
         long myFileSize = Files.size(Paths.get(pathname));
 
@@ -334,23 +431,81 @@ public class ClientHandler implements Runnable, Serializable {
         Pout2.println(songName);
         System.out.println("File name sent : "+songName);
 
-
-        //To reserve the place in the memory
         byte[] mybytearray = new byte[(int) myFileSize];
-
-        //Read the file from the disk, bufferedInputStream to make sure we don't lose information
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
 
-        //I'm reading from the disk and i want to place it in the memory
         bis.read(mybytearray, 0, mybytearray.length);
         //open outputStream on Socket
         OutputStream os = socket.getOutputStream();
         //Send byteArray
         os.write(mybytearray, 0, mybytearray.length);
         os.flush();
+
     }
 
-    //Method to remove a user from the list after they disconnected
+    public void receiveSongFromClient() throws IOException, UnsupportedAudioFileException, LineUnavailableException {
+        //Get file size
+        int totalsize = Integer.parseInt(in.readLine());
+        System.out.println("File size receive : " + totalsize);
+        byte[] mybytearray = new byte[totalsize];
+        //Get file name
+        String filename = in.readLine();
+        System.out.println("File name receive : " + filename);
+
+
+        //To get all that is sending
+        InputStream is = new BufferedInputStream(socket.getInputStream());
+        System.out.println("Input received");
+
+        Player player= new Player(filename,is);
+
+        System.out.println("Player created");
+
+        // Thread.sleep(300000);
+
+        //Create the file with the filename we get from the Buffin
+        FileOutputStream fos = new FileOutputStream(StoredFolder.getAbsolutePath() + "\\" + filename);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        int byteReadTot = 0;
+        while (byteReadTot < totalsize) {
+            //To place all the byte i receive in my bytearray to store it in a file on my disk
+            int byteRead = is.read(mybytearray, 0, mybytearray.length);
+            byteReadTot += byteRead;
+            System.out.println("byte read : " + byteReadTot);
+            bos.write(mybytearray, 0, byteRead);
+
+        }
+        bos.close();
+    }
+    public void SendSongofOtherToCli(String songName) throws IOException {
+
+        String pathname = StoredFolder.getAbsolutePath() +"\\"+ songName; //To have the absolute path of the song
+        File myFile = new File(pathname);
+        long myFileSize = Files.size(Paths.get(pathname));
+
+        PrintWriter Pout2 = new PrintWriter(socket.getOutputStream(), true);
+        //Send file size
+        Pout2.println(myFileSize);
+        System.out.println("File size sent : "+myFileSize);
+        //Send File name
+        Pout2.println(songName);
+        System.out.println("File name sent : "+songName);
+
+        byte[] mybytearray = new byte[(int) myFileSize];
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
+
+        bis.read(mybytearray, 0, mybytearray.length);
+        //open outputStream on Socket
+        OutputStream os = socket.getOutputStream();
+        //Send byteArray
+        os.write(mybytearray, 0, mybytearray.length);
+        os.flush();
+
+    }
+
+    /**
+     * Method to remove a user from the list after they disconnected
+     */
     public void CloseClientHandler() {
         //Delete this client from the clients arraylist
         if (handlerArrayList != null) {
@@ -366,7 +521,13 @@ public class ClientHandler implements Runnable, Serializable {
         }
     }
 
-    //Method to close all items created
+    /**
+     * Method to close all items created
+     *
+     * @param socket
+     * @param bufReader
+     * @param bufWriter
+     */
     public void closeClientHand(Socket socket, BufferedReader bufReader, BufferedWriter bufWriter) {
         CloseClientHandler();
         System.out.println("----" + clientUsername + " Connection has been closed ----");
@@ -392,7 +553,8 @@ public class ClientHandler implements Runnable, Serializable {
     }
 
 //------------------------------------------------------------------------------------------------
-//All Getters
+//All Getters & Setters
+//------------------------------------------------------------------------------------------------
 
     public Socket getSocket() {
         return socket;
