@@ -93,7 +93,7 @@ public class SongDetails implements ActionListener {
         jslidVolume.setFont(new Font("MV Boli", Font.PLAIN, 10));
         jslidVolume.addChangeListener(e -> {
             JSlider source = (JSlider) e.getSource();
-            client.getPlayer().setVolume((float) (source.getValue() / 100.0));
+            player.setVolume((float) (source.getValue() / 100.0));
         });
         jslidVolume.setAlignmentX(Component.CENTER_ALIGNMENT);
 
